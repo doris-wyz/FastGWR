@@ -10,7 +10,7 @@ Install dependencies:
 Example call to FastGWR:
 
 ```
-mpiexec -np 4 python fast-gwr.py -data input.csv -out results.csv -a -bw 1000
+mpiexec -np 4 python FastGWR.py -data input.csv -out results.csv -a -bw 1000
 ```
 
 ```
