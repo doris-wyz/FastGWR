@@ -97,7 +97,7 @@ def golden_section(a, c, delta, function, tol=1.0e-6, max_iter=200, int_score=Tr
         opt_bw = comm.bcast(opt_bw,root=0)
         diff = comm.bcast(diff,root=0)
         score = comm.bcast(score,root=0)
-    return opt_bw, np.round(score, 2)
+    return opt_bw
 
 def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv'):
     #Need Betas
@@ -130,6 +130,7 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv'):
             TSS = np.sum((y - np.mean(y))**2)
             R2 = 1- RSS/TSS
             
+            print("Fitting GWR using BW",bw)
             print("Diagnostic Information:")
             print("AICc:",aicc)
             print("ENP:",trS)
@@ -167,7 +168,7 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv'):
         llf = -np.log(tot_RSS)*n/2 - (1+np.log(np.pi/n*2))*n/2
         aicc = -2*llf + 2.0*n*(tot_trS + 1.0)/(n-tot_trS-2.0)
         R2 = 1- tot_RSS/tot_TSS
-        print("BW, AICc, R2:",bw, aicc,R2)
+        print("BW, AICc",bw, aicc)
         #print("Fitting Total Wall Time for bw {} is {}".format(bw, max(wt_43)))
         #print("Fitting Total Wall Time for bw {} is {}".format(bw, max(wt_43)))
         return aicc
