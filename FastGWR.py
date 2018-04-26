@@ -190,7 +190,8 @@ if __name__ == "__main__":
     fout  = parser.parse_args().out
     if parser.parse_args().bw is not None:
         bw = int(parser.parse_args().bw)
-    
+    bw = None
+
     if rank==0:
         print("Starting FastGWR with",size,"Processors")
     
