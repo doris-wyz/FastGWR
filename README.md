@@ -15,13 +15,14 @@ mpiexec -np 4 python fastgwr-mpi.py -data input.csv -out results.csv -a -bw 1000
 
 ```
 where:
--np 4: using 4 processors
--data input.csv: input data matrix
--out results.csv: output GWR results matrix including local parameter estimates, standard errors and local diagnostics
--a: Adaptive Bisquare kernel
--f: Fixed Gaussian kernel
+-np 4: using 4 processors.
+-data input.csv: input data matrix.
+-out results.csv: output GWR results matrix including local parameter estimates, standard errors and local diagnostics.
+-a (or --adaptive): Adaptive Bisquare kernel.
+-f (or --fixed): Fixed Gaussian kernel.
+-c (or --constant): Adding constant.
 -bw 1000: Pre-defined bandwidth parameter. If missing, it will (golden-section) search for the optimal bandwidth and use that to fit GWR model.
--aicc: using AICc as the optimization criterion
+-minbw 45: Lower bound in golden-section search.
 ```
 
 The input needs to be prepared in this order:

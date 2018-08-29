@@ -202,6 +202,7 @@ if __name__ == "__main__":
     parser.add_argument("-bw")
     parser.add_argument("-minbw")
     parser.add_argument('-f','--fixed',action='store_true')
+    parser.add_argument('-a','--adaptive',action='store_true')
     parser.add_argument('-p','--pysal',action='store_true')
     parser.add_argument('-c','--constant',action='store_true')
 
