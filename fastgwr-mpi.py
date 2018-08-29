@@ -1,18 +1,25 @@
 import math
 import numpy as np
 from mpi4py import MPI
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist,pdist
 import argparse
+#mpiexec -np 2 python fastgwr-mpi.py -data /Users/Ziqi/Desktop/developer/FastGWR/Zillow-test-dataset/zillow_5k.csv -out fast.csv
 
 def read(fname):
     #print("Reading",fname)
-    input = np.genfromtxt(fname, dtype=float, delimiter=',',skip_header=False)
+    if pysal:
+        input = np.genfromtxt(fname, dtype=float, delimiter=',',skip_header=False)
+    else:
+        input = np.genfromtxt(fname, dtype=float, delimiter=',',skip_header=True)
     #input = np.load(fname)
     #Converting things into matrices
     y = input[:,2].reshape(-1,1)
     n = input.shape[0]
-    #X = np.hstack([np.ones((n,1)),input[:,3:]])
-    X = input[:,3:]
+
+    if constant:
+        X = np.hstack([np.ones((n,1)),input[:,3:]])
+    else:
+        X = input[:,3:]
     coords = input[:,:2]
     return n,X,y,coords
 
@@ -108,7 +115,7 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
     #Need Betas
     if final:
         sub_Betas = np.empty((x_chunk.shape[0],2*k+3), dtype=np.float64)
-        #print(x_chunk.shape[0])
+
         pos = 0
         for i in x_chunk:
             sub_Betas[pos] = local_fit(i,bw,fixed,final)
@@ -125,37 +132,35 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
         
         if rank ==0:
             data = np.vstack(Betas_list)
-            #print(data.shape)
-            #RSS = np.sum(data[:,1]**2)
-            #trS = np.sum(data[:,2])
-            '''
-            trSTS = np.sum(data[:,4])
-            sigma2_v1v2 = RSS/(n-2*trS+trSTS)
-            '''
-            #sigma2_v1 = RSS/(n-trS)
-            #aicc = n*np.log(RSS/n) + n*np.log(2*np.pi) + n*(n+trS)/(n-trS-2.0)
-            #sigma2_v1 = RSS/(n-trS)
-            data[:,-k:] = data[:,-k:]
-            #TSS = np.sum((y - np.mean(y))**2)
-            #R2 = 1- RSS/TSS
+            #data[:,-k:] = data[:,-k:]
             
-            print("Fitting GWR using bw",bw)
-            '''
-            print("Diagnostic Information:")
-            print("AICc:",aicc)
-            print("ENP:",trS)
-            print("R2:",R2)
+            print("Fitting GWR Using Bandwidth:",bw)
+            if pysal:
+                np.savetxt(fout, data, delimiter=',',comments='')
+            if not pysal:
+                RSS = np.sum(data[:,1]**2)
+                TSS = np.sum((y - np.mean(y))**2)
+                R2 = 1- RSS/TSS
+                trS = np.sum(data[:,2])
+                #trSTS = np.sum(data[:,4])
+                #sigma2_v1v2 = RSS/(n-2*trS+trSTS)
+                sigma2_v1 = RSS/(n-trS)
+                aicc = n*np.log(RSS/n) + n*np.log(2*np.pi) + n*(n+trS)/(n-trS-2.0)
 
-            header="index,residual,yhat,influ,"
-            varNames = np.genfromtxt("zillow_1k.csv", dtype=str, delimiter=',',names=True,max_rows=1).dtype.names[3:]
-            varNames = ['intercept'] + list(varNames)
-            for x in varNames:
-                header += ("b_"+x+',')
-            for x in varNames:
-                header += ("se_"+x+',')
-                np.savetxt(fout, np.delete(data, 4, 1), delimiter=',',header=header[:-1],comments='')
-            '''
-            np.savetxt(fout, data, delimiter=',',comments='')
+                print("Diagnostic Information:")
+                print("AICc:",aicc)
+                print("ENP:",trS)
+                print("R2:",R2)
+                header="index,residual,influ,"
+                varNames = np.genfromtxt(fname, dtype=str, delimiter=',',names=True,max_rows=1).dtype.names[3:]
+                if constant:
+                    varNames = ['intercept'] + list(varNames)
+                for x in varNames:
+                    header += ("b_"+x+',')
+                for x in varNames:
+                    header += ("se_"+x+',')
+                    np.savetxt(fout, data, delimiter=',',header=header[:-1],comments='')
+        
             return
         return
     
@@ -195,26 +200,31 @@ if __name__ == "__main__":
     parser.add_argument("-data")
     parser.add_argument("-out")
     parser.add_argument("-bw")
-    parser.add_argument("-f")
     parser.add_argument("-minbw")
+    parser.add_argument('-f','--fixed',action='store_true')
+    parser.add_argument('-p','--pysal',action='store_true')
+    parser.add_argument('-c','--constant',action='store_true')
 
     fname = parser.parse_args().data
     fout  = parser.parse_args().out
-    
+
     bw = None
     if parser.parse_args().bw is not None:
         bw = int(parser.parse_args().bw)
-    
-    fixed = False
-    if parser.parse_args().f is not None:
-        fixed = True
-    minbw = 45
-    if parser.parse_args().minbw is not None:
-        min_bw = int(parser.parse_args().bw)
-    
+
+    fixed = parser.parse_args().fixed
+    pysal = parser.parse_args().pysal
+    constant = parser.parse_args().constant
+
     if rank==0:
         print("Starting FastGWR with",size,"Processors")
-    
+        print("Data Input Path:",fname)
+        print("Output Result Path:",fout)
+        print("Constant:",constant)
+        if fixed:
+            print("Spatial Kernel: Fixed Gaussian")
+        else:
+            print("Spatial Kernel: Adaptive Bisquare")
     #Data Copying
     if rank ==0:
         n,X, y,coords = read(fname)
@@ -238,19 +248,32 @@ if __name__ == "__main__":
     n = comm.bcast(n,root=0)
     k = comm.bcast(k,root=0)
 
-    t2 = MPI.Wtime()
-    wt_dc = comm.gather(t2-t1, root=0)
-    #print("Process {} Data Copying Time: {} secs".format(rank, t2-t1))
+    if not fixed:
+        maxbw = n
+        minbw = 40 + 2 * k
+        if parser.parse_args().minbw is not None:
+            minbw = int(parser.parse_args().minbw)
+    else:
+        minbw = float('Inf')
+        maxbw = -100
+        for i in range(n):
+            dist = cdist([coords[i]],coords)
+            if np.max(dist) > maxbw:
+                maxbw = np.max(dist)
+            if np.min(dist) < minbw:
+                minbw = np.min(dist)
+        if parser.parse_args().minbw is not None:
+            minbw = int(parser.parse_args().minbw)
+
     m = int(math.ceil(float(len(iter)) / size))
-    #print("chunk:",rank*m,(rank+1)*m)
     x_chunk = iter[rank*m:(rank+1)*m]
 
-
     if bw is None:
+        if rank ==0:
+            print("Optimal Bandwidth Searching...")
         gwr_func = lambda bw: mpi_gwr_fit(bw,fixed=fixed)
-        bw = golden_section(minbw, n, 0.38197, gwr_func)
+        bw = golden_section(minbw, maxbw, 0.38197, gwr_func)
         mpi_gwr_fit(bw,final=True,fout=fout,fixed=fixed)
-
     else:
         mpi_gwr_fit(bw,final=True,fout=fout,fixed=fixed)
 
