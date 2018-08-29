@@ -72,8 +72,9 @@ def golden_section(a, c, delta, function, tol=1.0e-6, max_iter=200, int_score=Tr
     dict = {}
     while np.abs(diff) > tol and iters < max_iter:
         iters += 1
-        b = np.round(b)
-        d = np.round(d)
+        if not fixed:
+            b = np.round(b)
+            d = np.round(d)
         
         if b in dict:
             score_b = dict[b]
@@ -208,14 +209,18 @@ if __name__ == "__main__":
 
     fname = parser.parse_args().data
     fout  = parser.parse_args().out
-
-    bw = None
-    if parser.parse_args().bw is not None:
-        bw = int(parser.parse_args().bw)
-
     fixed = parser.parse_args().fixed
     pysal = parser.parse_args().pysal
     constant = parser.parse_args().constant
+
+    bw = None
+    if parser.parse_args().bw is not None:
+        if fixed:
+            bw = float(parser.parse_args().bw)
+        else:
+            bw = int(parser.parse_args().bw)
+
+
 
     if rank==0:
         print("Starting FastGWR with",size,"Processors")
@@ -259,13 +264,17 @@ if __name__ == "__main__":
         maxbw = -100
         for i in range(n):
             dist = cdist([coords[i]],coords)
-            if np.max(dist) > maxbw:
-                maxbw = np.max(dist)
-            if np.min(dist) < minbw:
-                minbw = np.min(dist)
+            tempmax = np.max(dist)
+            tempmin = np.min(dist[np.nonzero(dist)])
+            if tempmax > maxbw:
+                maxbw = tempmax
+            if tempmin < minbw:
+                minbw = tempmin
+        minbw = minbw / 2
+        maxbw = maxbw * 2
         if parser.parse_args().minbw is not None:
-            minbw = int(parser.parse_args().minbw)
-
+            minbw = float(parser.parse_args().minbw)
+    print(minbw,maxbw,np.min(pdist(coords)))
     m = int(math.ceil(float(len(iter)) / size))
     x_chunk = iter[rank*m:(rank+1)*m]
 
@@ -274,6 +283,8 @@ if __name__ == "__main__":
             print("Optimal Bandwidth Searching...")
         gwr_func = lambda bw: mpi_gwr_fit(bw,fixed=fixed)
         bw = golden_section(minbw, maxbw, 0.38197, gwr_func)
+        if fixed:
+            bw = round(bw,2)
         mpi_gwr_fit(bw,final=True,fout=fout,fixed=fixed)
     else:
         mpi_gwr_fit(bw,final=True,fout=fout,fixed=fixed)
