@@ -1,9 +1,15 @@
+#FastGWR MPI Script
+#Author: Ziqi Li et al.
+#Email: lziqi@asu.edu
+
 import math
 import numpy as np
 from mpi4py import MPI
 from scipy.spatial.distance import cdist,pdist
 import argparse
-#mpiexec -np 2 python fastgwr-mpi.py -data /Users/Ziqi/Desktop/developer/FastGWR/Zillow-test-dataset/zillow_5k.csv -out fast.csv
+
+#Example Call:
+#mpiexec -np 2 python fastgwr-mpi.py -data Zillow-test-dataset/zillow_5k.csv -out fast.csv
 
 def read(fname):
     #print("Reading",fname)
@@ -147,7 +153,7 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
                 #sigma2_v1v2 = RSS/(n-2*trS+trSTS)
                 sigma2_v1 = RSS/(n-trS)
                 aicc = n*np.log(RSS/n) + n*np.log(2*np.pi) + n*(n+trS)/(n-trS-2.0)
-
+                data[:,-k:] = np.sqrt(data[:,-k:]*sigma2_v1)
                 print("Diagnostic Information:")
                 print("AICc:",aicc)
                 print("ENP:",trS)

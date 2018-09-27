@@ -55,7 +55,7 @@ Reference
 ```
 Li,Z., Fotheringham,A.S., Li,W., Oshan,T. (2018) Fast Geographically Weighted Regression (FastGWR): 
 A Scalable Algorithm to Investigate Spatial Process Heterogeneity in Millions of Observations.
-International Journal of Geographic Information Science.
+International Journal of Geographic Information Science. doi: 10.1080/13658816.2018.1521523
 ```
 
 
