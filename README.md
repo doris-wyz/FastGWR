@@ -3,8 +3,11 @@
 Install dependencies:
 
 ```
-1. Download OpenMPI from https://www.open-mpi.org
-2. pip install mpi4py
+1. Install any MPI implementation
+    OpenMPI: https://www.open-mpi.org
+    Microsoft MPI: https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi
+
+2. Install `mpi4py` package
 ```
 
 Example call to FastGWR which can be called on desktop or HPC:
@@ -52,6 +55,7 @@ Example call to FastGWR using pysal/mgwr interface can be found in this [noteboo
 
 
 Reference
+ [FastGWR](https://www.tandfonline.com/doi/full/10.1080/13658816.2018.1521523)
 ```
 Li,Z., Fotheringham,A.S., Li,W., Oshan,T. (2018) Fast Geographically Weighted Regression (FastGWR): 
 A Scalable Algorithm to Investigate Spatial Process Heterogeneity in Millions of Observations.
