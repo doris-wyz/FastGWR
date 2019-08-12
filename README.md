@@ -1,5 +1,18 @@
 # FastGWR
 
+
+Paper: [FastGWR](https://www.tandfonline.com/doi/full/10.1080/13658816.2018.1521523)
+
+```
+Li,Z., Fotheringham,A.S., Li,W., Oshan,T. (2018) Fast Geographically Weighted Regression (FastGWR): 
+A Scalable Algorithm to Investigate Spatial Process Heterogeneity in Millions of Observations.
+International Journal of Geographic Information Science. doi: 10.1080/13658816.2018.1521523
+```
+
+Fast computations developed in FastGWR have been integrated into  [`mgwr`](https://github.com/pysal/mgwr) python pacakge.
+
+If you would like to use FastGWR directly (such as under HPC env), please read following instructions:
+
 Install dependencies:
 
 ```
@@ -41,27 +54,3 @@ Y-coord: Y coordinate of the location point
 y: dependent variable
 X1...Xk: independent variables
 ```
-
-
-A friendely interface following pysal/mgwr package can be found under this branch:
-
-
-```
-https://github.com/Ziqi-Li/mgwr/tree/FastGWR
-```
-
-
-Example call to FastGWR using pysal/mgwr interface can be found in this [notebook](https://github.com/Ziqi-Li/mgwr/blob/FastGWR/mgwr/notebooks/FastGWR.ipynb)
-
-
-Reference
- [FastGWR](https://www.tandfonline.com/doi/full/10.1080/13658816.2018.1521523)
-```
-Li,Z., Fotheringham,A.S., Li,W., Oshan,T. (2018) Fast Geographically Weighted Regression (FastGWR): 
-A Scalable Algorithm to Investigate Spatial Process Heterogeneity in Millions of Observations.
-International Journal of Geographic Information Science. doi: 10.1080/13658816.2018.1521523
-```
-
-
-
-
